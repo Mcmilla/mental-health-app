@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  sessions  Session[]
+  reports   AnalysisReport[]
+  consultantReviews ConsultantReview[]
+  auditLogs AuditLog[]
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  audioUrl  String
+  createdAt DateTime @default(now())
+
+  analysisReport AnalysisReport?
+}
+
+model AnalysisReport {
+  id          Int      @id @default(autoincrement())
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   Int @unique
+  emotions    Json
+  insights    String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+
+  consultantReview ConsultantReview?
+}
+
+model ConsultantReview {
+  id          Int      @id @default(autoincrement())
+  report      AnalysisReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId    Int @unique
+  consultant  User     @relation(fields: [consultantId], references: [id])
+  consultantId Int
+
+  comments    String
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  action      String
+  timestamp   DateTime @default(now())
+}
+
+enum Role {
+  USER
+  CONSULTANT
+  ADMIN
+}
