@@ -19,15 +19,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Generate JWT token
-    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    });
+    // Extract only the first name (first word of the name)
+    const firstName = user.name.split(" ")[0];
 
-    // Return token and user data to store in localStorage
+    // Generate JWT token with only userId and firstName
+    const token = jwt.sign(
+      { id: user.id, name: firstName }, // Only storing user ID and first name
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
+    );
+
+    // console.log("Stored in session:", { id: user.id, firstName });
+
+    // Return only userId and firstName
     return NextResponse.json({
       message: "Login successful",
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, name: firstName },
       token,
     }, { status: 200 });
 
